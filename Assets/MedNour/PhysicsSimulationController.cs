@@ -11,6 +11,11 @@ public class PhysicsSimulationController : MonoBehaviour
     public SkateRamp ramp;
     public FracturedWall wall;
     
+    [Header("Paramètre Alpha")]
+    [Range(0f, 1f)]
+    [Tooltip("Modifie les propriétés physiques de la sphère (masse, friction, résistance)")]
+    public float alpha = 0.5f;
+    
     [Header("Configuration de la simulation")]
     [Range(0.1f, 5f)]
     public float sphereRadius = 0.5f;
@@ -46,6 +51,7 @@ public class PhysicsSimulationController : MonoBehaviour
     private float lastGravity;
     private float lastRampHeight;
     private float lastRampLength;
+    private float lastAlpha;
     
     [Header("Configuration du mur")]
     public Vector3 wallPosition = new Vector3(5, 1.5f, 0);
@@ -101,13 +107,16 @@ public class PhysicsSimulationController : MonoBehaviour
         GameObject sphereObj = new GameObject("PhysicsSphere");
         sphere = sphereObj.AddComponent<PhysicsSphere>();
         sphere.radius = sphereRadius;
-        sphere.mass = sphereMass;
+        
+        // Appliquer alpha aux propriétés physiques
+        sphere.mass = Mathf.Lerp(0.5f, sphereMass, alpha);
+        sphere.airResistance = Mathf.Lerp(0f, sphereAirResistance, alpha);
+        sphere.rollingFriction = Mathf.Lerp(0f, sphereFriction, alpha);
+        sphere.restitution = Mathf.Lerp(0.1f, sphereRestitution, alpha);
+        
         sphere.initialPosition = actualStartPos;
         sphere.sphereColor = new Color(0.2f, 0.5f, 1f);
         sphere.gravity = gravity;
-        sphere.rollingFriction = sphereFriction;
-        sphere.restitution = sphereRestitution;
-        sphere.airResistance = sphereAirResistance;
         
         // Créer le mur seulement si activé
         if (enableWall)
@@ -129,7 +138,9 @@ public class PhysicsSimulationController : MonoBehaviour
         
         Debug.Log("Simulation initialisée!");
         Debug.Log($"Sphère démarre au sommet de la rampe: {actualStartPos}");
-        Debug.Log($"Masse: {sphereMass} kg, Résistance air: {sphereAirResistance}");
+        Debug.Log($"Alpha: {alpha}");
+        Debug.Log($"Masse (avec alpha): {sphere.mass} kg, Résistance air: {sphere.airResistance}");
+        Debug.Log($"Friction: {sphere.rollingFriction}, Restitution: {sphere.restitution}");
         Debug.Log("La sphère va glisser sur la rampe avec physique réaliste");
     }
     
@@ -142,6 +153,7 @@ public class PhysicsSimulationController : MonoBehaviour
         lastGravity = gravity;
         lastRampHeight = rampHeight;
         lastRampLength = rampLength;
+        lastAlpha = alpha;
     }
     
     bool ParametersChanged()
@@ -152,7 +164,8 @@ public class PhysicsSimulationController : MonoBehaviour
                lastRestitution != sphereRestitution ||
                lastGravity != gravity ||
                lastRampHeight != rampHeight ||
-               lastRampLength != rampLength;
+               lastRampLength != rampLength ||
+               lastAlpha != alpha;
     }
     
     void RestartSimulation()
@@ -167,6 +180,25 @@ public class PhysicsSimulationController : MonoBehaviour
         SaveCurrentParameters();
         
         Debug.Log("=== SIMULATION REDÉMARRÉE ===");
+    }
+    
+    /// <summary>
+    /// Met à jour les propriétés physiques de la sphère en fonction de alpha
+    /// </summary>
+    public void UpdateSpherePhysics()
+    {
+        if (sphere == null) return;
+        
+        CustomRigidBody rb = sphere.GetRigidBody();
+        if (rb == null) return;
+        
+        // Appliquer alpha aux propriétés physiques
+        rb.mass = Mathf.Lerp(0.5f, sphereMass, alpha);
+        sphere.airResistance = Mathf.Lerp(0f, sphereAirResistance, alpha);
+        sphere.rollingFriction = Mathf.Lerp(0f, sphereFriction, alpha);
+        sphere.restitution = Mathf.Lerp(0.1f, sphereRestitution, alpha);
+        
+        Debug.Log($"Alpha modifié: {alpha} - Masse: {rb.mass:F2} kg, Air: {sphere.airResistance:F2}, Friction: {sphere.rollingFriction:F2}");
     }
     
     void FixedUpdate()

@@ -58,6 +58,7 @@
     <Compile Include="Assets\MedNour\SceneSetup.cs" />
     <Compile Include="Assets\MedNour\PhysicsTests.cs" />
     <Compile Include="Assets\MedNour\PhysicsSimulationController.cs" />
+    <Compile Include="Assets\Louay\EggFraction.cs" />
     <Compile Include="Assets\Diana\GlassFractureCustomPhysics.cs" />
   </ItemGroup>
   <ItemGroup>
